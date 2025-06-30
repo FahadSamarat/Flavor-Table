@@ -29,6 +29,34 @@
     <footer>
         <p>&copy; 2025 Fahad Samarat. All rights reserved.</p>
     </footer>
+
+    <!-- Modal for Editing Recipe -->
+    <div id="editModal" style="display: none;" class="modal">
+        <div class="modal-content">
+            <span onclick="closeModal()" class="close">&times;</span>
+            <form class="update-form" id="updateForm">
+                <input type="hidden" id="recipeId">
+                <label>Title:
+                </label>
+                <input type="text" id="recipeTitle" required>
+                <label>Image URL:
+                </label>
+                <input type="text" id="recipeImage">
+                <label>Ingredients (comma-separated):
+                </label>
+                <input type="text" id="recipeIngredients">
+                <label>Instructions:
+                </label>
+                <textarea id="recipeInstructions"></textarea>
+                <label>Ready in (minutes):
+                </label>
+                <input type="number" id="recipeReadyIn" min="0">
+                <button class="save-btn" type="submit">Save Changes</button>
+                <button class="remove-btn" type="button" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
     <script src="/app.js"></script>
 </body>
 
