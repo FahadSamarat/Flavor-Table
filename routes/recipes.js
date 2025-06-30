@@ -8,7 +8,7 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
 
 // GET recipes from DB
-router.get("/api/recipes", async (req, res) => {
+router.get("/api/recipes/all", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM recipes ORDER BY id DESC");
     

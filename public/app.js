@@ -85,20 +85,16 @@ if (randomBtn) {
 }
 
 
-
 // ====== Save to Favorites Function ======
 async function saveToFavorites(recipe) {
   try {
-    // Safely extract and normalize ingredients
     let ingredients = recipe.usedIngredients || recipe.ingredients || [];
 
     if (typeof ingredients === 'string') {
       try {
-        // Only parse if it looks like JSON
         if (ingredients.trim().startsWith('[')) {
           ingredients = JSON.parse(ingredients);
         } else {
-          // Wrap as single item
           ingredients = [ingredients.trim()];
         }
       } catch {
@@ -109,50 +105,35 @@ async function saveToFavorites(recipe) {
     if (!Array.isArray(ingredients)) {
       ingredients = [];
     }
-console.log("Saving this:", JSON.stringify({
-  ingredients: ingredients
-}, null, 2));
-    const res = await fetch("/api/recipes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: recipe.title,
-        image: recipe.image,
-        instructions: recipe.instructions || "",
-        ingredients: ingredients,
-        readyin: recipe.readyInMinutes || null
-      })
-    });
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      if (errorData.error?.includes("unique_violation")) {
-        alert("Already in favorites!");
-        return;
-      }
-      throw new Error("Failed to save recipe.");
-    }
+    console.log("Saving this:", JSON.stringify({ ingredients }, null, 2));
+
+    await axios.post("/api/recipes", {
+      title: recipe.title,
+      image: recipe.image,
+      instructions: recipe.instructions || "",
+      ingredients: ingredients,
+      readyin: recipe.readyInMinutes || null
+    });
 
     alert("Saved to favorites!");
     updateFavoritesCounter();
-
   } catch (err) {
-    console.error("Error saving recipe:", err);
-    alert("Could not save recipe to favorites.");
+    if (axios.isAxiosError(err) && err.response?.data?.error?.includes("unique_violation")) {
+      alert("Already in favorites!");
+    } else {
+      console.error("Error saving recipe:", err);
+      alert("Could not save recipe to favorites.");
+    }
   }
 }
 
-
-
-// ====== Make saveToFavorites globally available ======
 window.saveToFavorites = saveToFavorites;
 
 // ====== Load Favorites ======
 async function loadFavorites() {
   try {
-    const res = await fetch("/api/recipes");
-    const recipes = await res.json();
-
+    const { data: recipes } = await axios.get("/api/recipes/all");
     const favoritesList = document.getElementById("favoritesList");
 
     if (!Array.isArray(recipes) || recipes.length === 0) {
@@ -167,7 +148,7 @@ async function loadFavorites() {
       } else if (typeof recipe.ingredients === 'string') {
         try {
           ingredientsArray = JSON.parse(recipe.ingredients);
-        } catch (e) {
+        } catch {
           ingredientsArray = recipe.ingredients.split(',').map(i => i.trim());
         }
       }
@@ -182,14 +163,13 @@ async function loadFavorites() {
           </ul>
           <p>Instructions:</p>
           <p>${recipe.instructions || 'N/A'}</p>
-          <p>Ready in:(minutes)</p>
+          <p>Ready in:</p>
           <p>${recipe.readyin ? `${recipe.readyin} minutes` : 'Unknown'}</p>
           <button class="save-btn edit-btn" onclick='openEditModal(${JSON.stringify(recipe)})'>Edit</button>
           <button class="remove-btn delete-btn" onclick='deleteRecipe(${recipe.id})'>Delete</button>
         </div>
       `;
     }).join("");
-
   } catch (err) {
     console.error(err);
     document.getElementById("favoritesList").innerHTML = "<p>Failed to load favorite recipes.</p>";
@@ -201,13 +181,9 @@ async function deleteRecipe(id) {
   if (!confirm("Are you sure you want to delete this recipe?")) return;
 
   try {
-    const res = await fetch(`/api/recipes/${id}`, {
-      method: "DELETE"
-    });
-
-    if (!res.ok) throw new Error("Failed to delete recipe.");
-    updateFavoritesCounter();
+    await axios.delete(`/api/recipes/${id}`);
     alert("Recipe deleted.");
+    updateFavoritesCounter();
     loadFavorites();
   } catch (err) {
     console.error(err);
@@ -241,20 +217,13 @@ document.getElementById("updateForm")?.addEventListener("submit", async (e) => {
     image: document.getElementById("recipeImage").value,
     instructions: document.getElementById("recipeInstructions").value,
     ingredients: document.getElementById("recipeIngredients").value
-                  .split(",")
-                  .map(i => i.trim()),
+      .split(",")
+      .map(i => i.trim()),
     readyin: parseInt(document.getElementById("recipeReadyIn").value) || null
   };
 
   try {
-    const res = await fetch(`/api/recipes/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedRecipe)
-    });
-
-    if (!res.ok) throw new Error("Failed to update recipe.");
-
+    await axios.put(`/api/recipes/${id}`, updatedRecipe);
     alert("Recipe updated.");
     closeModal();
     loadFavorites();
@@ -270,8 +239,7 @@ async function updateFavoritesCounter() {
   if (!favnmpr) return;
 
   try {
-    const res = await fetch("/api/recipes");
-    const recipes = await res.json();
+    const { data: recipes } = await axios.get("/api/recipes/all");
     favnmpr.textContent = recipes.length > 0 ? ` (${recipes.length})` : '';
   } catch (err) {
     console.error("Could not update favorites counter:", err);
