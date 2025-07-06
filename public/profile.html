@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search</title>
+    <title>Profile</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 
@@ -27,12 +27,11 @@
         <div class="mainContainer">
 
             <div class="container">
-                <h1 class="h-Container">Search Recipes by Ingredients</h1>
-                <form id="searchForm">
-                    <input type="text" id="ingredientsInput" placeholder="e.g. chicken, rice, tomato" required />
-                    <button type="submit" class="search-btn">Search</button>
-                </form>
-                <div id="results"></div>
+                <h1 class="h-Container">Profile</h1>
+                    <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+                    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                    <button class="remove-btn"  onclick="logout()">Logout</button>
+
             </div>
         </div>
     </main>

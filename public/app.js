@@ -1,3 +1,87 @@
+// ====== Set Axios Authorization Header if Token Exists ======
+const protectedPages = ["/profile", "/favorite"]; // add all protected routes here
+const currentPage = window.location.pathname;
+
+if (protectedPages.includes(currentPage)) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    window.location.href = "/login";
+  }
+}
+
+// Register Handler
+document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById("registerUsername").value;
+  const email = document.getElementById("registerEmail").value;
+  const password = document.getElementById("registerPassword").value;
+
+  try {
+    const res = await axios.post("api/auth/register", { username, email, password });
+    alert("Registration successful. Please login.");
+    window.location.href = "/login.html"; // Redirect to login
+  } catch (err) {
+    alert(err.response?.data || "Registration failed");
+  }
+});
+
+// Login Handler
+document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
+  try {
+    // const res = await axios.post("api/auth/login", { email, password });
+    // localStorage.setItem("token", res.data.token);
+    // alert("Login successful!");
+    // window.location.href = "/profile.html"; // Redirect to profile
+    const res = await axios.post("api/auth/login", { email, password });
+    localStorage.setItem("token", res.data.token);
+    axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+    alert("Login successful!");
+    window.location.href = "/profile"; // Or profile.html
+  } catch (err) {
+    alert(err.response?.data || "Login failed");
+  }
+});
+
+// Load Profile Info
+async function loadProfile() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    window.location.href = "/login";
+    return;
+  }
+
+  try {
+    const res = await axios.get("/api/auth/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    document.getElementById("profileUsername").textContent = res.data.username;
+console.log("Token:", token);
+console.log("Response:", res.data);
+
+    
+    document.getElementById("profileEmail").textContent = res.data.email;
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load profile");
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  }
+}
+
+// Logout
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "/login.html";
+}
+
+
 // ====== Search Section ======
 const searchForm = document.getElementById("searchForm");
 if (searchForm) {
@@ -107,14 +191,23 @@ async function saveToFavorites(recipe) {
     }
 
     console.log("Saving this:", JSON.stringify({ ingredients }, null, 2));
+    const token = localStorage.getItem("token");
 
-    await axios.post("/api/recipes", {
-      title: recipe.title,
-      image: recipe.image,
-      instructions: recipe.instructions || "",
-      ingredients: ingredients,
-      readyin: recipe.readyInMinutes || null
-    });
+    await axios.post(
+      "/api/recipes",
+      {
+        title: recipe.title,
+        image: recipe.image,
+        instructions: recipe.instructions || "",
+        ingredients: ingredients,
+        readyin: recipe.readyInMinutes || null
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
 
     alert("Saved to favorites!");
     updateFavoritesCounter();
@@ -133,7 +226,13 @@ window.saveToFavorites = saveToFavorites;
 // ====== Load Favorites ======
 async function loadFavorites() {
   try {
-    const { data: recipes } = await axios.get("/api/recipes/all");
+    const token = localStorage.getItem("token");
+
+    const { data: recipes } = await axios.get("/api/recipes/all", {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+});
     const favoritesList = document.getElementById("favoritesList");
 
     if (!Array.isArray(recipes) || recipes.length === 0) {
@@ -165,15 +264,26 @@ async function loadFavorites() {
           <p>${recipe.instructions || 'N/A'}</p>
           <p>Ready in:</p>
           <p>${recipe.readyin ? `${recipe.readyin} minutes` : 'Unknown'}</p>
-          <button class="save-btn edit-btn" onclick='openEditModal(${JSON.stringify(recipe)})'>Edit</button>
+          <button 
+            class="save-btn edit-btn" 
+            data-recipe='${JSON.stringify(recipe).replace(/'/g, "&apos;")}' 
+            onclick="openEditModalFromButton(this)"
+          >
+            Edit
+          </button>
           <button class="remove-btn delete-btn" onclick='deleteRecipe(${recipe.id})'>Delete</button>
         </div>
       `;
     }).join("");
+
   } catch (err) {
     console.error(err);
     document.getElementById("favoritesList").innerHTML = "<p>Failed to load favorite recipes.</p>";
   }
+}
+function openEditModalFromButton(button) {
+  const recipe = JSON.parse(button.dataset.recipe);
+  openEditModal(recipe);
 }
 
 // ====== Delete Recipe ======
@@ -181,7 +291,13 @@ async function deleteRecipe(id) {
   if (!confirm("Are you sure you want to delete this recipe?")) return;
 
   try {
-    await axios.delete(`/api/recipes/${id}`);
+            const token = localStorage.getItem("token");
+
+
+    await axios.delete(`/api/recipes/${id}`,{
+  headers: {
+    Authorization: `Bearer ${token}`
+  }});
     alert("Recipe deleted.");
     updateFavoritesCounter();
     loadFavorites();
@@ -223,11 +339,17 @@ document.getElementById("updateForm")?.addEventListener("submit", async (e) => {
   };
 
   try {
-    await axios.put(`/api/recipes/${id}`, updatedRecipe);
+        const token = localStorage.getItem("token");
+
+    await axios.put(`/api/recipes/${id}`, updatedRecipe,{
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+});
     alert("Recipe updated.");
     closeModal();
     loadFavorites();
-  } catch (err) {
+  } catch (err) {s
     console.error(err);
     alert("Failed to update recipe.");
   }
@@ -235,31 +357,84 @@ document.getElementById("updateForm")?.addEventListener("submit", async (e) => {
 
 // ====== Favorites Counter ======
 async function updateFavoritesCounter() {
+
   const favnmpr = document.getElementById("fav-nmpr");
   if (!favnmpr) return;
 
   try {
-    const { data: recipes } = await axios.get("/api/recipes/all");
+        const token = localStorage.getItem("token");
+  if (!token) {
+    return;
+  }
+        const { data: recipes } = await axios.get("/api/recipes/all", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     favnmpr.textContent = recipes.length > 0 ? ` (${recipes.length})` : '';
   } catch (err) {
     console.error("Could not update favorites counter:", err);
   }
 }
 
+
+// ====== user name nav ======
+async function usernav() {
+    const token = localStorage.getItem("token");
+  if (!token) {
+    return;
+  }
+
+  try {
+    const res = await axios.get("/api/auth/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    document.getElementById("user-n").textContent = ` (${res.data.username})`;
+
+  } catch (err) {
+    console.error("Could not update user nav name:", err);
+  }
+}
+
 // ====== DOMContentLoaded ======
+// document.addEventListener("DOMContentLoaded", () => {
+//   const currentPath = window.location.pathname;
+
+//   if (currentPath === "/profile.html") {
+//     loadProfile();
+//   }
+
+//   if (document.getElementById("favoritesList")) {
+//     loadFavorites();
+//   }
+
+//   updateFavoritesCounter();
+
+//   const links = document.querySelectorAll(".nav a");
+//   links.forEach(link => {
+//     if (link.getAttribute("href") === currentPath) {
+//       link.classList.add("active");
+//     }
+//   });
+// });
 document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("favoritesList")) {
+  const currentPath = window.location.pathname;
+
+  if (currentPath === "/profile") {
+    loadProfile();
+  }
+
+  if (currentPath === "/favorite" || document.getElementById("favoritesList")) {
     loadFavorites();
   }
 
   updateFavoritesCounter();
+  usernav();
 
   const links = document.querySelectorAll(".nav a");
-  const currentPath = window.location.pathname;
-
   links.forEach(link => {
     if (link.getAttribute("href") === currentPath) {
       link.classList.add("active");
     }
   });
 });
+
