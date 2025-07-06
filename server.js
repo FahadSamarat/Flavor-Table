@@ -1,4 +1,5 @@
 require("dotenv").config();
+const path = require("path");
 
 const express = require("express");
 const app = express();
@@ -6,7 +7,8 @@ const app = express();
 var cors = require("cors");
 app.use(cors());
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
+
 
 const axios = require("axios");
 
