@@ -39,7 +39,7 @@ footer {
 .nav {
     background-color: rgba(34, 34, 59);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    height: 75px;
+    height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -187,6 +187,10 @@ button {
     margin-top: 20px;
 }
 
+.container {
+    gap: 15px;
+}
+
 .container form {
     margin-top: 10px;
     display: flex;
@@ -213,7 +217,8 @@ button {
 .random-btn,
 .saveRandomBtn,
 .search-btn,
-.save-btn {
+.save-btn,
+.g-btn {
     border: none;
     border-radius: 8px;
     background-color: rgb(93, 142, 108);
@@ -224,7 +229,8 @@ button {
 .random-btn:hover,
 .saveRandomBtn:hover,
 .search-btn:hover,
-.save-btn:hover {
+.save-btn:hover,
+.g-btn:hover {
     background-color: rgb(150, 195, 126);
     cursor: pointer;
 }
@@ -253,10 +259,12 @@ button {
     height: 100px;
     max-height: 150px;
 }
+
 .update-form input {
     width: 100%;
 
 }
+
 .update-form label {
     color: #22223B;
     font-weight: bold;
@@ -279,4 +287,8 @@ button {
     right: 15px;
     font-size: 24px;
     cursor: pointer;
+}
+
+.error {
+    color: red;
 }

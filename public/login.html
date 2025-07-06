@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search</title>
+    <title>Login</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 
@@ -27,12 +27,13 @@
         <div class="mainContainer">
 
             <div class="container">
-                <h1 class="h-Container">Search Recipes by Ingredients</h1>
-                <form id="searchForm">
-                    <input type="text" id="ingredientsInput" placeholder="e.g. chicken, rice, tomato" required />
-                    <button type="submit" class="search-btn">Search</button>
+                <h1 class="h-Container">Login</h1>
+                <form id="loginForm">
+                    <input type="email" id="loginEmail" placeholder="Email" required />
+                    <input type="password" id="loginPassword" placeholder="Password" required />
+                    <button class="g-btn" type="submit">Login</button>
                 </form>
-                <div id="results"></div>
+                <p>Don't have an account? <a href="/register">Register here</a></p>
             </div>
         </div>
     </main>
