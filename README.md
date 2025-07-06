@@ -31,3 +31,6 @@ Yes, there were a few parts of the lab that I found challenging. Even though I w
 
 Project Link:
 [Link](https://fahadsamarat.github.io/Flavor-Table/)
+
+Render Deployment:
+[Link](https://flavor-table-dop5.onrender.com)
