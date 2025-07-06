@@ -3,7 +3,8 @@ const express = require("express");
 const router = express.Router();
 
 router.get("/favorite", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/Favorite.html"));
+  res.sendFile(path.join(__dirname, "..", "public", "favorite.html"));
+
 });
 
 module.exports = router;
